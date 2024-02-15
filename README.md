@@ -1,4 +1,4 @@
-# Online Proctoring System
+# Real-Time Proctoring System
 
 A computer vision based proctoring system to monitor the student's face during an online examination by performing face tracking and recognition. Written in Python.
 
