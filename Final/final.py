@@ -49,16 +49,20 @@ cap = cv2.VideoCapture(0)
 
 # Define function to show frame
 def show_frames():
-   # Get the latest frame and convert into Image   
+   # Get the latest frame and convert into Image 
+   # cap.read()[0] contains boolean value True if the frame was read successfully  
    frame = cap.read()[1]
    gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
    saved_frame = frame.copy()
+   # Returns list of face locations in the frame
+   # 1 denotes the number of times upsampling is done before running face detection (used for smaller faces)
    faces = detector(gray_frame, 1)
    for face in faces:
       x1 = face.left()
       y1 = face.top()
       x2 = face.right()
       y2 = face.bottom()
+      # color in BGR format, 3 represents thickness
       cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 3)
    
    if len(faces) == 0:
@@ -75,11 +79,11 @@ def show_frames():
    
    cv2image = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
    img = Image.fromarray(cv2image)
-   # Convert image to PhotoImage
-   imgtk = ImageTk.PhotoImage(image = img)
+   # Convert image to ImageTk.PhotoImage object
+   imgtk = ImageTk.PhotoImage(image=img)
    image_label.imgtk = imgtk
    image_label.configure(image=imgtk)
-   # Repeat after an interval to capture continiously
+   # Repeat after an interval of 20 milliseconds to capture continously
    image_label.after(20, show_frames)
 
 show_frames()
@@ -92,24 +96,12 @@ candidate_face_encoding = face_recognition.face_encodings(sample_image)[0]
 
 # Create arrays of known face encodings and their names
 known_face_encodings = [
-    candidate_face_encoding
+   candidate_face_encoding
 ]
 
 known_face_names = [
-    candidate_name
+   candidate_name
 ]
-
-def error():
-   error_win = Tk()
-   error_win.geometry('240x50')
-   
-   message = Label(error_win, text='WARNING! Potential cheating detected.')
-   message.grid(row=0, column=0, padx=10, pady=10)
-
-   # dismiss = Button(error_win, text='Dismiss', command=error_win.destroy())
-   # dismiss.grid(row=1, column=0, padx=10, pady=10)
-
-   error_win.mainloop()
 
 video_capture = cv2.VideoCapture(0)
 # Initialize some variables
@@ -159,7 +151,7 @@ while True:
          if matches[best_match_index]:
             name = known_face_names[best_match_index]
 
-            face_names.append(name)
+         face_names.append(name)
 
    process_this_frame = not process_this_frame
 
@@ -171,19 +163,26 @@ while True:
       bottom *= 4
       left *= 4
 
+      error_color = (0, 0, 255)
+      color = (0, 255, 0)
+      if name == "Unknown":
+         color = error_color
       # Draw a box around the face
-      cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
+      cv2.rectangle(frame, (left, top), (right, bottom), color, 2)
 
       # Draw a label with a name below the face
-      cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), -1)
+      cv2.rectangle(frame, (left, bottom - 35), (right, bottom), color, -1)
       font = cv2.FONT_HERSHEY_DUPLEX
       cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
 
+   if "Unknown" in face_names or len(face_locations) == 0:
+      error_msg = 'WARNING! Potential cheating detected.'
+      font = cv2.FONT_HERSHEY_SIMPLEX
+      bottom_left_corner = (10, frame.shape[0] - 10)
+      cv2.putText(frame, error_msg, bottom_left_corner, font, 1.0, error_color, 2)
+
    # Display the resulting image
    cv2.imshow('Webcam Feed', frame)
-
-   #if "Unknown" in face_names or len(face_locations) == 0:
-      #error()   
       
    # Hit 'q' on the keyboard to quit!
    if cv2.waitKey(1) == ord('q'):
